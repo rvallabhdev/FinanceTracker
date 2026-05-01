@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-1gm^*-jdb=id)g_tjftai0eo2y10+scdup%+($l72l@%-$%py@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['financetracker-ximt.onrender.com']
 
 
 # Application definition
