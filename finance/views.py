@@ -36,6 +36,7 @@ class RegisterView(View):
             user = form.save()  # Create new user
             login(request, user)  # Auto-login the user
             return redirect('dashboard')  # Redirect to dashboard
+        return render(request, 'finance/register.html', {'form': form})
 
 
 # ============================================
