@@ -1,0 +1,239 @@
+{% extends 'finance/base.html' %}
+
+{% block title %}Transactions List{% endblock title %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header Section -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Transactions List</h1>
+            <p class="text-sm text-gray-500 mt-1">View and manage all your transactions</p>
+        </div>
+        <a href="{% url 'transaction_add' %}" 
+           class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200 shadow-md hover:shadow-lg inline-flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Add Transaction
+        </a>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg shadow-md p-4 text-white">
+            <p class="text-sm opacity-90">Total Transactions</p>
+            <p class="text-2xl font-bold">{{ transactions.count }}</p>
+        </div>
+        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-md p-4 text-white">
+            <p class="text-sm opacity-90">Total Income</p>
+            <p class="text-2xl font-bold">
+                ${{ total_income|floatformat:2 }}
+            </p>
+        </div>
+        <div class="bg-gradient-to-r from-red-500 to-red-600 rounded-lg shadow-md p-4 text-white">
+            <p class="text-sm opacity-90">Total Expenses</p>
+            <p class="text-2xl font-bold">
+                ${{ total_expense|floatformat:2 }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Search and Filter Bar -->
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <input type="text" id="searchInput" placeholder="Search by title or category..." 
+                   class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <select id="typeFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">All Types</option>
+                <option value="Income">Income</option>
+                <option value="Expense">Expense</option>
+            </select>
+            <input type="date" id="startDate" placeholder="Start Date" 
+                   class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <input type="date" id="endDate" placeholder="End Date" 
+                   class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200" id="transactionsTable">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(0)">
+                            Date <span class="ml-1">&#8597;</span>
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(1)">
+                            Title <span class="ml-1">&#8597;</span>
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(3)">
+                            Amount <span class="ml-1">&#8597;</span>
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for transaction in transactions %}
+                    <tr class="hover:bg-gray-50 transition-colors duration-150 transaction-row" 
+                        data-title="{{ transaction.title|lower }}" 
+                        data-category="{{ transaction.category|lower }}"
+                        data-type="{{ transaction.transaction_type }}"
+                        data-date="{{ transaction.date|date:'Y-m-d' }}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ transaction.date|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ transaction.title }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span class="px-2 py-1 bg-gray-100 rounded-full text-xs">{{ transaction.category }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold {% if transaction.transaction_type == 'Income' %}text-green-600{% else %}text-red-600{% endif %}">
+                            {% if transaction.transaction_type == 'Income' %}+{% else %}-{% endif %} ${{ transaction.amount|floatformat:2 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium {% if transaction.transaction_type == 'Income' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {% if transaction.transaction_type == "Income" %}
+                                    &#128176; Credit
+                                {% else %}
+                                    &#128184; Debit
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm ">
+                            <button class="text-indigo-600 hover:text-indigo-900 mr-3 cursor-pointer" onclick="editTransaction({{ transaction.id }})">
+                                <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                            <button class="text-red-600 hover:text-red-900 cursor-pointer" onclick="deleteTransaction({{ transaction.id }})">
+                                <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p class="mt-2">No transactions found</p>
+                            <a href="{% url 'transaction_add' %}" class="mt-4 inline-block text-indigo-600 hover:text-indigo-500">Add your first transaction →</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+   <!-----Link to Go to Dashboard--> 
+    <div class="text-center mt-4">
+        <a href="{% url 'dashboard' %}" class="font-medium text-indigo-600 hover:text-indigo-500 transition duration-150 ease-in-out">
+            &larr; Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- JavaScript for filtering and sorting -->
+<script>
+    // Filter and search functionality
+    function filterTable() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const typeFilter = document.getElementById('typeFilter').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        const rows = document.querySelectorAll('.transaction-row');
+        
+        rows.forEach(row => {
+            const title = row.dataset.title;
+            const category = row.dataset.category;
+            const type = row.dataset.type;
+            const date = row.dataset.date;
+            
+            let show = true;
+            
+            if (searchTerm && !title.includes(searchTerm) && !category.includes(searchTerm)) {
+                show = false;
+            }
+            
+            if (typeFilter && type !== typeFilter) {
+                show = false;
+            }
+            
+            if (startDate && date < startDate) {
+                show = false;
+            }
+            
+            if (endDate && date > endDate) {
+                show = false;
+            }
+            
+            row.style.display = show ? '' : 'none';
+        });
+    }
+    
+    // Sorting functionality
+    let sortDirection = {};
+    
+    function sortTable(columnIndex) {
+        const table = document.getElementById('transactionsTable');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('.transaction-row'));
+        
+        sortDirection[columnIndex] = !sortDirection[columnIndex];
+        
+        rows.sort((a, b) => {
+            let aValue, bValue;
+            
+            switch(columnIndex) {
+                case 0: // Date
+                    aValue = new Date(a.dataset.date);
+                    bValue = new Date(b.dataset.date);
+                    break;
+                case 1: // Title
+                    aValue = a.cells[1].textContent;
+                    bValue = b.cells[1].textContent;
+                    break;
+                case 3: // Amount
+                    aValue = parseFloat(a.cells[3].textContent.replace(/[^0-9.-]/g, ''));
+                    bValue = parseFloat(b.cells[3].textContent.replace(/[^0-9.-]/g, ''));
+                    break;
+                default:
+                    return 0;
+            }
+            
+            if (aValue < bValue) return sortDirection[columnIndex] ? -1 : 1;
+            if (aValue > bValue) return sortDirection[columnIndex] ? 1 : -1;
+            return 0;
+        });
+        
+        rows.forEach(row => tbody.appendChild(row));
+    }
+    
+    // Edit and Delete functions
+    function editTransaction(id) {
+        window.location.href = `/transaction/edit/${id}/`;
+    }
+    
+    function deleteTransaction(id) {
+        if (confirm('Are you sure you want to delete this transaction?')) {
+            window.location.href = `/transaction/delete/${id}/`;
+        }
+    }
+    
+    // Event listeners
+    const searchInput = document.getElementById('searchInput');
+    const typeFilter = document.getElementById('typeFilter');
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+    
+    if (searchInput) searchInput.addEventListener('input', filterTable);
+    if (typeFilter) typeFilter.addEventListener('change', filterTable);
+    if (startDate) startDate.addEventListener('change', filterTable);
+    if (endDate) endDate.addEventListener('change', filterTable);
+</script>
+{% endblock content %}
