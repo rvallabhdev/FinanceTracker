@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from finance.models import Transaction, Goal
+from finance.models import Transaction, Goal, Category
 
 class RegisterForm(UserCreationForm):
     class Meta:
@@ -18,3 +18,8 @@ class GoalForm(forms.ModelForm):
     class Meta:
         model = Goal
         fields = ['name', 'target_amount', 'deadline']
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['name', 'category_type']

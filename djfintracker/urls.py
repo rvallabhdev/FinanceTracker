@@ -6,4 +6,5 @@ urlpatterns = [
     path('',include('finance.urls')),
     path('accounts/',include('django.contrib.auth.urls')),
     #login, logout, password-change,password-change-done,password-reset,password-reset-done gets added
+    path('csvhandler/',include('csvhandler.urls')),
 ]

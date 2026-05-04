@@ -1,116 +1,75 @@
 from django.shortcuts import render, HttpResponse, redirect, get_object_or_404
 from django.views import View
-from finance.forms import GoalForm, RegisterForm, TransactionForm
+from finance.forms import GoalForm, RegisterForm, TransactionForm, CategoryForm
 from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
-from finance.models import Transaction, Goal
+from finance.models import Transaction, Goal, Category
 from django.db.models import Sum
 from django.contrib import messages
+from django.db.models import Q
+from datetime import datetime, timedelta
+
 
 # ============================================
 # USER REGISTRATION VIEW
 # ============================================
 class RegisterView(View):
-    """
-    Handles user registration.
-    
-    WORKFLOW:
-    1. GET request: Display empty registration form
-    2. POST request: Validate form data, create user, log them in automatically
-    3. After successful registration, redirect to dashboard
-    
-    LOGIC:
-    - Uses custom RegisterForm (extends Django's UserCreationForm)
-    - Auto-login after registration (no need for separate login step)
-    - Redirects to dashboard which requires login (LoginRequiredMixin will protect it)
-    """
+
     def get(self, request, *args, **kwargs):
-        """Display empty registration form"""
         form = RegisterForm()
         return render(request, 'finance/register.html', {'form': form})
-    
+
     def post(self, request, *args, **kwargs):
-        """Process registration form submission"""
         form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()  # Create new user
-            login(request, user)  # Auto-login the user
-            return redirect('dashboard')  # Redirect to dashboard
+            user = form.save()
+            login(request, user)
+            return redirect('dashboard')
+        return render(request, 'finance/register.html', {'form': form})
 
 
 # ============================================
-# MAIN DASHBOARD VIEW
+# DASHBOARD VIEW
 # ============================================
 class DashboardView(LoginRequiredMixin, View):
-    """
-    Main dashboard showing financial overview.
-    Requires authentication (LoginRequiredMixin)
-    
-    WORKFLOW:
-    1. Fetch user's transactions and goals
-    2. Calculate total income, expenses, and net savings
-    3. Allocate savings to goals in deadline order
-    4. Calculate progress percentage for each goal
-    5. Pass all data to dashboard template
-    
-    LOGIC FOR GOAL PROGRESS CALCULATION:
-    - Goals are processed in deadline order (earliest deadline first)
-    - remaining_savings starts as net_savings (income - expense)
-    - For each goal:
-        * If savings >= target: goal gets 100% progress, subtract target from savings
-        * If savings > 0 but less than target: goal gets partial percentage, savings becomes 0
-        * If savings = 0: goal gets 0% progress
-    - This shows which goals can be achieved with current savings
-    """
+
     def get(self, request, *args, **kwargs):
-        # Fetch user data
+
         transactions = Transaction.objects.filter(user=request.user).order_by('-date')
         goals = Goal.objects.filter(user=request.user).order_by('deadline')
-        
-        # Calculate financial totals
+
         total_income = Transaction.objects.filter(
-            user=request.user, 
+            user=request.user,
             transaction_type='Income'
         ).aggregate(Sum('amount'))['amount__sum'] or 0
-        
+
         total_expense = Transaction.objects.filter(
-            user=request.user, 
+            user=request.user,
             transaction_type='Expense'
         ).aggregate(Sum('amount'))['amount__sum'] or 0
-        
+
         net_savings = total_income - total_expense
-        
-        # Goal progress allocation logic
+
         goal_progress = []
-        remaining_savings = net_savings  # Track savings pool
-        
+        remaining_savings = net_savings
+
         for goal in goals:
             if remaining_savings >= goal.target_amount:
-                # Scenario 1: Enough savings to fully fund this goal
                 progress = 100
-                goal_progress.append({
-                    'goal': goal,
-                    'progress': progress,
-                })
-                remaining_savings -= goal.target_amount  # Deduct used savings
-                
+                remaining_savings -= goal.target_amount
+
             elif remaining_savings > 0:
-                # Scenario 2: Partial funding available
                 progress = (remaining_savings / goal.target_amount) * 100
-                goal_progress.append({
-                    'goal': goal,
-                    'progress': progress,
-                })
-                remaining_savings = 0  # All savings exhausted
-                
+                remaining_savings = 0
+
             else:
-                # Scenario 3: No savings remaining
                 progress = 0
-                goal_progress.append({
-                    'goal': goal,
-                    'progress': progress,
-                })
-        
+
+            goal_progress.append({
+                'goal': goal,
+                'progress': progress,
+            })
+
         context = {
             'transactions': transactions,
             'goals': goals,
@@ -118,268 +77,297 @@ class DashboardView(LoginRequiredMixin, View):
             'total_income': total_income,
             'total_expense': total_expense,
             'net_savings': net_savings,
-        }   
+        }
+
         return render(request, 'finance/dashboard.html', context)
 
 
 # ============================================
-# TRANSACTION CRUD OPERATIONS
+# TRANSACTION CREATE
 # ============================================
 class TransactionCreateView(LoginRequiredMixin, View):
-    """
-    Create new transaction (Income or Expense)
-    
-    WORKFLOW:
-    1. GET: Display empty form
-    2. POST: Validate form, assign user, save to database
-    3. Show success message and redirect to transaction list
-    
-    LOGIC:
-    - Uses TransactionForm (ModelForm for Transaction model)
-    - commit=False to add user before saving
-    - Uses Django messages framework for user feedback
-    """
+
     def get(self, request, *args, **kwargs):
         form = TransactionForm()
-        return render(request, 'finance/transaction_form.html', {'form': form, 'is_edit': False})
-    
+        categories = Category.objects.filter(user=request.user)
+        return render(request, 'finance/transaction_form.html', {
+            'form': form,
+            'is_edit': False,
+            'categories': categories
+        })
+
     def post(self, request, *args, **kwargs):
         form = TransactionForm(request.POST)
+        categories = Category.objects.filter(user=request.user)  # FIXED
+
         if form.is_valid():
-            transaction = form.save(commit=False)  # Don't save to DB yet
-            transaction.user = request.user  # Assign logged-in user
-            transaction.save()  # Now save to DB
+            transaction = form.save(commit=False)
+            transaction.user = request.user
+            transaction.save()
+
             messages.success(request, f'Transaction "{transaction.title}" added successfully!')
             return redirect('transaction_list')
-        return render(request, 'finance/transaction_form.html', {'form': form, 'is_edit': False})
+
+        return render(request, 'finance/transaction_form.html', {
+            'form': form,
+            'is_edit': False,
+            'categories': categories
+        })
 
 
+# ============================================
+# TRANSACTION EDIT
+# ============================================
 class TransactionEditView(LoginRequiredMixin, View):
-    """
-    Edit existing transaction
-    
-    WORKFLOW:
-    1. GET: Fetch transaction by ID, verify ownership, populate form with existing data
-    2. POST: Validate updated data, save to database
-    3. Show success message and redirect to transaction list
-    
-    SECURITY:
-    - get_object_or_404 ensures user can only access their own transactions
-    - user=request.user prevents accessing other users' data
-    """
+
     def get(self, request, pk, *args, **kwargs):
         transaction = get_object_or_404(Transaction, pk=pk, user=request.user)
-        form = TransactionForm(instance=transaction)  # Pre-fill form with existing data
-        return render(request, 'finance/transaction_form.html', {'form': form, 'transaction': transaction, 'is_edit': True})
-    
+        form = TransactionForm(instance=transaction)
+        categories = Category.objects.filter(user=request.user)
+
+        return render(request, 'finance/transaction_form.html', {
+            'form': form,
+            'transaction': transaction,
+            'is_edit': True,
+            'categories': categories
+        })
+
     def post(self, request, pk, *args, **kwargs):
         transaction = get_object_or_404(Transaction, pk=pk, user=request.user)
-        form = TransactionForm(request.POST, instance=transaction)  # Update existing instance
+        form = TransactionForm(request.POST, instance=transaction)
+        categories = Category.objects.filter(user=request.user)
+
         if form.is_valid():
-            form.save()  # Updates the existing record
+            form.save()
             messages.success(request, f'Transaction "{transaction.title}" updated successfully!')
             return redirect('transaction_list')
-        return render(request, 'finance/transaction_form.html', {'form': form, 'transaction': transaction, 'is_edit': True})
+
+        return render(request, 'finance/transaction_form.html', {
+            'form': form,
+            'transaction': transaction,
+            'is_edit': True,
+            'categories': categories
+        })
 
 
+# ============================================
+# TRANSACTION DELETE
+# ============================================
 class TransactionDeleteView(LoginRequiredMixin, View):
-    """
-    Delete transaction
-    
-    WORKFLOW:
-    1. POST: Get transaction by ID, verify ownership, delete from database
-    2. Show success message, redirect to transaction list
-    
-    NOTE: Uses POST method (not GET) for security - prevents accidental deletions
-    """
+
     def post(self, request, pk, *args, **kwargs):
         transaction = get_object_or_404(Transaction, pk=pk, user=request.user)
-        title = transaction.title  # Store title before deletion (for success message)
+        title = transaction.title
         transaction.delete()
+
         messages.success(request, f'Transaction "{title}" deleted successfully!')
         return redirect('transaction_list')
 
 
+# ============================================
+# TRANSACTION LIST
+# ============================================
 class TransactionListView(LoginRequiredMixin, View):
-    """
-    Display all user transactions with summary
-    
-    WORKFLOW:
-    1. Fetch all user transactions ordered by date (newest first)
-    2. Calculate total income and expense for summary cards
-    3. Pass to template for display
-    
-    LOGIC:
-    - Uses aggregate() with Sum for efficient database calculation
-    - or 0 handles case when no transactions exist
-    - Transaction amounts show with + or - signs in template
-    """
-    def get(self, request, *args, **kwargs): 
-        transactions = Transaction.objects.filter(user=request.user).order_by('-date')
-        
-        # Calculate summary statistics
-        total_income = Transaction.objects.filter(
-            user=request.user, 
+
+    def get(self, request, *args, **kwargs):
+
+        transactions = Transaction.objects.filter(user=request.user)
+
+        search = request.GET.get('search')
+        txn_type = request.GET.get('type')
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+
+        if search:
+            transactions = transactions.filter(
+                Q(title__icontains=search) |
+                Q(category__name__icontains=search)
+            )
+
+        if txn_type:
+            transactions = transactions.filter(transaction_type=txn_type)
+
+        if start_date:
+            transactions = transactions.filter(date__gte=start_date)
+
+        if end_date:
+            end_date_obj = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
+            transactions = transactions.filter(date__lt=end_date_obj)
+
+        transactions = transactions.order_by('-date')
+
+        total_income = transactions.filter(
             transaction_type='Income'
         ).aggregate(Sum('amount'))['amount__sum'] or 0
-        
-        total_expense = Transaction.objects.filter(
-            user=request.user, 
+
+        total_expense = transactions.filter(
             transaction_type='Expense'
         ).aggregate(Sum('amount'))['amount__sum'] or 0
-        
-        context = {
+
+        return render(request, 'finance/transaction_list.html', {
             'transactions': transactions,
             'total_income': total_income,
             'total_expense': total_expense,
-        }
-        
-        return render(request, 'finance/transaction_list.html', context)
+        })
 
 
 # ============================================
-# GOAL CRUD OPERATIONS
+# CATEGORY CRUD (ADDED)
+# ============================================
+class CategoryListView(LoginRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        categories = Category.objects.filter(user=request.user)
+        return render(request, "finance/category_list.html", {
+            "categories": categories
+        })
+
+
+class CategoryCreateView(LoginRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        form = CategoryForm()
+        return render(request, "finance/category_form.html", {
+            "form": form
+        })
+
+    def post(self, request, *args, **kwargs):
+        form = CategoryForm(request.POST)
+
+        if form.is_valid():
+            category = form.save(commit=False)
+            category.user = request.user
+            category.save()
+
+            messages.success(request, f'Category "{category.name}" created successfully!')
+            return redirect("category_list")
+
+        return render(request, "finance/category_form.html", {
+            "form": form
+        })
+
+
+class CategoryUpdateView(LoginRequiredMixin, View):
+
+    def get(self, request, pk, *args, **kwargs):
+        category = get_object_or_404(Category, pk=pk, user=request.user)
+        form = CategoryForm(instance=category)
+
+        return render(request, "finance/category_form.html", {
+            "form": form,
+            "category": category
+        })
+
+    def post(self, request, pk, *args, **kwargs):
+        category = get_object_or_404(Category, pk=pk, user=request.user)
+        form = CategoryForm(request.POST, instance=category)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Category "{category.name}" updated successfully!')
+            return redirect("category_list")
+
+        return render(request, "finance/category_form.html", {
+            "form": form,
+            "category": category
+        })
+
+
+class CategoryDeleteView(LoginRequiredMixin, View):
+
+    def post(self, request, pk, *args, **kwargs):
+        category = get_object_or_404(Category, pk=pk, user=request.user)
+        name = category.name
+        category.delete()
+
+        messages.success(request, f'Category "{name}" deleted successfully!')
+        return redirect("category_list")
+
+
+# ============================================
+# GOAL VIEWS
 # ============================================
 class GoalCreateView(LoginRequiredMixin, View):
-    """
-    Create new financial goal
-    
-    WORKFLOW:
-    1. GET: Display empty form
-    2. POST: Validate form, assign user, save to database
-    3. Show success message and redirect to dashboard
-    
-    NOTE: Goal model tracks target_amount only (not current_amount)
-    Progress is calculated in DashboardView based on savings allocation
-    """
+
     def get(self, request, *args, **kwargs):
         form = GoalForm()
         return render(request, 'finance/goal_form.html', {'form': form})
-    
+
     def post(self, request, *args, **kwargs):
         form = GoalForm(request.POST)
         if form.is_valid():
             goal = form.save(commit=False)
             goal.user = request.user
             goal.save()
+
             messages.success(request, f'Goal "{goal.name}" created successfully!')
-            return redirect('dashboard')  # Redirect to dashboard to see goal progress
+            return redirect('dashboard')
+
         return render(request, 'finance/goal_form.html', {'form': form})
 
 
 class GoalEditView(LoginRequiredMixin, View):
-    """
-    Edit existing goal
-    
-    WORKFLOW:
-    1. GET: Fetch goal by ID, verify ownership, populate form with existing data
-    2. POST: Validate updated data, save to database
-    3. Show success message and redirect to dashboard
-    
-    SECURITY: get_object_or_404 filters by user=request.user
-    """
+
     def get(self, request, pk, *args, **kwargs):
         goal = get_object_or_404(Goal, pk=pk, user=request.user)
         form = GoalForm(instance=goal)
         return render(request, 'finance/goal_form.html', {'form': form, 'goal': goal})
-    
+
     def post(self, request, pk, *args, **kwargs):
         goal = get_object_or_404(Goal, pk=pk, user=request.user)
         form = GoalForm(request.POST, instance=goal)
+
         if form.is_valid():
             form.save()
             messages.success(request, f'Goal "{goal.name}" updated successfully!')
             return redirect('dashboard')
+
         return render(request, 'finance/goal_form.html', {'form': form, 'goal': goal})
 
 
 class GoalDeleteView(LoginRequiredMixin, View):
-    """
-    Delete goal
-    
-    WORKFLOW:
-    1. POST: Get goal by ID, verify ownership, delete from database
-    2. Show success message, redirect to dashboard
-    
-    NOTE: Uses POST method for security (CSRF protection)
-    """
+
     def post(self, request, pk, *args, **kwargs):
         goal = get_object_or_404(Goal, pk=pk, user=request.user)
         name = goal.name
         goal.delete()
+
         messages.success(request, f'Goal "{name}" deleted successfully!')
-        return redirect('dashboard')  # Return to dashboard
+        return redirect('dashboard')
 
 
 class GoalListView(LoginRequiredMixin, View):
-    """
-    Display all user goals with summary statistics
-    
-    WORKFLOW:
-    1. Fetch all user goals ordered by deadline (earliest first)
-    2. Calculate total target amount for summary card
-    3. Pass to template for display
-    
-    LOGIC:
-    - Orders by deadline to show urgent goals first
-    - Template shows target amounts (progress calculated in DashboardView)
-    - Provides edit/delete buttons for each goal
-    """
-    def get(self, request, *args, **kwargs): 
+
+    def get(self, request, *args, **kwargs):
+
         goals = Goal.objects.filter(user=request.user).order_by('deadline')
-        
-        # Calculate total of all goal targets
         total_target = goals.aggregate(Sum('target_amount'))['target_amount__sum'] or 0
-        
-        context = {
+
+        return render(request, 'finance/goal_list.html', {
             'goals': goals,
             'total_target': total_target,
-        }
-        return render(request, 'finance/goal_list.html', context)
-
+        })
+    
+# Add these at the bottom of your finance/views.py file, after all your existing views
 
 # ============================================
-# KEY PATTERNS AND REUSABLE LOGIC
+# EXPORT VIEWS (Redirect to csvhandler)
 # ============================================
-"""
-1. LoginRequiredMixin: Always add to views that need authentication
-   - Redirects unauthenticated users to login page
-   - Set LOGIN_URL in settings.py
+class ExportOptionsView(LoginRequiredMixin, View):
+    """Redirect to csvhandler export options"""
+    
+    def get(self, request, *args, **kwargs):
+        from django.urls import reverse
+        return redirect(reverse('csvhandler:export_options'))
 
-2. get_object_or_404 Pattern: 
-   - Always filter by user=request.user for security
-   - Prevents users from accessing each other's data
 
-3. Messages Framework:
-   - Use messages.success() after create/update/delete
-   - Display messages in base template
-
-4. Form Handling Pattern:
-   - GET: Create empty form or form with instance
-   - POST: Validate, save, redirect on success or re-render with errors
-
-5. Commit=False Pattern:
-   - Use when you need to add user or modify data before saving
-   - Then call save() explicitly
-
-6. Aggregate Queries:
-   - Use .aggregate(Sum('field')) for totals
-   - Always add 'or 0' to handle None results
-
-7. Redirect After POST:
-   - Always redirect after successful POST (Post/Redirect/Get pattern)
-   - Prevents duplicate form submissions
-
-8. Template Context:
-   - Pass only what's needed to templates
-   - Use descriptive variable names
-
-9. URL Naming Convention:
-   - Use consistent names: 'model_list', 'model_add', 'model_edit', 'model_delete'
-   - Makes templates easier to maintain
-
-10. Reusability Tips:
-    - Transaction and Goal follow same CRUD pattern
-    - Copy-paste and rename model/view/form for new features
-    - Same template structure can be reused
-"""
+class ExportTransactionsView(LoginRequiredMixin, View):
+    """Redirect to csvhandler export transactions"""
+    
+    def get(self, request, *args, **kwargs):
+        from django.urls import reverse
+        # Preserve any query parameters
+        url = reverse('csvhandler:export_transactions_csv')
+        if request.GET:
+            url += '?' + request.GET.urlencode()
+        return redirect(url)

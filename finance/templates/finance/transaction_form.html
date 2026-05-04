@@ -16,78 +16,42 @@
         
         <form class="space-y-6" method="POST">
             {% csrf_token %}
-            
-            <!-- Title field -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1" for="title">Title</label>
-                <input type="text" name="title" id="title" maxlength="255" 
-                       class="appearance-none w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none hover:border-indigo-400 hover:shadow-sm transition duration-200"
-                       placeholder="Enter transaction title (e.g., Salary, Groceries)" 
-                       value="{{ form.title.value|default:'' }}"
-                       required>
-                {% if form.title.errors %}
-                    {% for error in form.title.errors %}
-                        <p class="text-red-500 text-sm mt-1">{{ error }}</p>
-                    {% endfor %}
-                {% endif %}
-            </div>
 
-            <!-- Amount field -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1" for="amount">Amount</label>
-                <input type="number" name="amount" id="amount" 
-                       class="appearance-none w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none hover:border-indigo-400 hover:shadow-sm transition duration-200"
-                       placeholder="Enter amount (e.g., 100.50)" 
-                       step="0.01" min="0.01" 
-                       value="{{ form.amount.value|default:'' }}"
-                       required>
-                {% if form.amount.errors %}
-                    {% for error in form.amount.errors %}
-                        <p class="text-red-500 text-sm mt-1">{{ error }}</p>
-                    {% endfor %}
-                {% endif %}
-            </div>
-
-            <!-- Transaction Type field -->
+            <!-- TRANSACTION TYPE -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1" for="transaction_type">Transaction Type</label>
-                <select name="transaction_type" id="transaction_type" 
+                <select name="transaction_type" id="transaction_type"
                         class="appearance-none w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none hover:border-indigo-400 hover:shadow-sm transition duration-200"
                         required>
-                    <option value="" {% if not form.transaction_type.value %}selected{% endif %} disabled>Select transaction type</option>
-                    <option value="Income" {% if form.transaction_type.value == 'Income' %}selected{% endif %}>Income &#128176;</option>
-                    <option value="Expense" {% if form.transaction_type.value == 'Expense' %}selected{% endif %}>Expense &#128184;</option>
+                    <option value="" disabled {% if not form.transaction_type.value %}selected{% endif %}>
+                        Select transaction type
+                    </option>
+                    <option value="Income" {% if form.transaction_type.value == 'Income' %}selected{% endif %}>Income 💰</option>
+                    <option value="Expense" {% if form.transaction_type.value == 'Expense' %}selected{% endif %}>Expense 💸</option>
                 </select>
-                {% if form.transaction_type.errors %}
-                    {% for error in form.transaction_type.errors %}
-                        <p class="text-red-500 text-sm mt-1">{{ error }}</p>
-                    {% endfor %}
-                {% endif %}
             </div>
 
-            <!-- Date field -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1" for="date">Date</label>
-                <input type="date" name="date" id="date" 
-                       class="appearance-none w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none hover:border-indigo-400 hover:shadow-sm transition duration-200"
-                       value="{{ form.date.value|date:'Y-m-d'|default:'' }}"
-                       required>
-                {% if form.date.errors %}
-                    {% for error in form.date.errors %}
-                        <p class="text-red-500 text-sm mt-1">{{ error }}</p>
-                    {% endfor %}
-                {% endif %}
-            </div>
-
-            <!-- Category field -->
+            <!-- CATEGORY -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1" for="category">Category</label>
-                <input type="text" name="category" id="category" maxlength="255"
+
+                <select name="category" id="category"
                        class="appearance-none w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none hover:border-indigo-400 hover:shadow-sm transition duration-200"
-                       placeholder="Enter category (e.g., Food, Rent, Shopping)" 
-                       value="{{ form.category.value|default:'' }}"
                        required>
-                <p class="text-xs text-gray-500 mt-1">Suggested: Food, Rent, Utilities, Entertainment, Transportation, Healthcare</p>
+
+                    <option value="" disabled {% if not form.category.value %}selected{% endif %}>
+                        Select category
+                    </option>
+
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}" data-type="{{ cat.category_type }}"
+                            {% if form.category.value|stringformat:"s" == cat.id|stringformat:"s" %}selected{% endif %}>
+                            {{ cat.name }}
+                        </option>
+                    {% endfor %}
+
+                </select>
+
                 {% if form.category.errors %}
                     {% for error in form.category.errors %}
                         <p class="text-red-500 text-sm mt-1">{{ error }}</p>
@@ -95,34 +59,96 @@
                 {% endif %}
             </div>
 
-            <!-- Submit button -->
+            <!-- Title -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="title">Title</label>
+                <input type="text" name="title" id="title" maxlength="255" 
+                       class="appearance-none w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none hover:border-indigo-400 hover:shadow-sm transition duration-200"
+                       value="{{ form.title.value|default:'' }}"
+                       required>
+            </div>
+
+            <!-- Amount -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="amount">Amount</label>
+                <input type="number" name="amount" id="amount" 
+                       class="appearance-none w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none hover:border-indigo-400 hover:shadow-sm transition duration-200"
+                       step="0.01" min="0.01" 
+                       value="{{ form.amount.value|default:'' }}"
+                       required>
+            </div>
+
+            <!-- Date -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="date">Date</label>
+                <input type="date" name="date" id="date" 
+                       class="appearance-none w-full px-4 py-2 border border-gray-300 rounded-lg"
+                       value="{{ form.date.value|date:'Y-m-d'|default:'' }}"
+                       required>
+            </div>
+
+            <!-- Submit -->
             <div>
                 <button type="submit" 
-                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200 cursor-pointer">
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
                     {% if transaction %}Update Transaction{% else %}Save Transaction{% endif %}
                 </button>
             </div>
         </form>
 
-        <!-- Delete button (only show when editing) -->
         {% if transaction %}
         <div class="border-t border-gray-200 pt-4 mt-4">
-            <form method="POST" action="{% url 'transaction_delete' transaction.id %}" onsubmit="return confirm('Are you sure you want to delete this transaction?');">
+            <form method="POST" action="{% url 'transaction_delete' transaction.id %}">
                 {% csrf_token %}
                 <button type="submit" 
-                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-200 cursor-pointer">
+                        class="w-full flex justify-center py-2 px-4 bg-red-600 text-white rounded-md">
                     Delete Transaction
                 </button>
             </form>
         </div>
         {% endif %}
 
-        <!-- Link to Go Back -->
         <div class="text-center mt-4">
-            <a href="{% url 'transaction_list' %}" class="font-medium text-indigo-600 hover:text-indigo-500 transition duration-150 ease-in-out">
-                &larr; Back to Transactions
+            <a href="{% url 'transaction_list' %}" class="text-indigo-600">
+                ← Back to Transactions
             </a>
         </div>
     </div>
 </div>
+
+<!-- FIXED FILTER LOGIC -->
+<script>
+    const typeSelect = document.getElementById("transaction_type");
+    const categorySelect = document.getElementById("category");
+
+    function filterCategories() {
+        const type = typeSelect.value;
+
+        Array.from(categorySelect.options).forEach(option => {
+            if (!option.value) return;
+
+            const categoryType = option.getAttribute("data-type");
+
+            if (!type || categoryType === type) {
+                option.style.display = "block";
+            } else {
+                option.style.display = "none";
+            }
+        });
+
+        // ✅ Only reset if invalid
+        if (categorySelect.selectedOptions.length) {
+            const selected = categorySelect.selectedOptions[0];
+            if (selected.style.display === "none") {
+                categorySelect.value = "";
+            }
+        }
+    }
+
+    typeSelect.addEventListener("change", filterCategories);
+
+    // ✅ CRITICAL for edit mode
+    window.addEventListener("load", filterCategories);
+</script>
+
 {% endblock content %}

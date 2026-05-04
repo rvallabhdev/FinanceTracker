@@ -1,0 +1,147 @@
+{% extends 'finance/base.html' %}
+
+{% block title %}Export {{ model_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="bg-indigo-600 px-6 py-4">
+            <h1 class="text-xl font-bold text-white">Export {{ model_name }}</h1>
+            {% if model_name != 'Categories' %}
+                <p class="text-indigo-100 text-sm mt-1">Select date range for export</p>
+            {% endif %}
+        </div>
+        
+        <div class="p-6">
+            <form method="GET" action="{% if model_name == 'Transactions' %}{% url 'csvhandler:export_transactions_csv' %}{% elif model_name == 'Goals' %}{% url 'csvhandler:export_goals_csv' %}{% else %}{% url 'csvhandler:export_categories_csv' %}{% endif %}" id="exportForm">
+                
+                {% if form.non_field_errors %}
+                <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+                
+                <!-- Only show date range for Transactions and Goals, not for Categories -->
+                {% if model_name != 'Categories' %}
+                <!-- Date Range Type -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">
+                        Select Date Range
+                    </label>
+                    
+                    <div class="space-y-2">
+                        {% for radio in form.date_range_type %}
+                        <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                            {{ radio.tag }}
+                            <span class="ml-2 text-gray-700">{{ radio.choice_label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if form.date_range_type.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.date_range_type.errors }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Custom Date Range -->
+                <div id="customDateRange" class="mb-6 hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="{{ form.start_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Start Date
+                            </label>
+                            {{ form.start_date }}
+                            {% if form.start_date.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.start_date.errors }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label for="{{ form.end_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                End Date
+                            </label>
+                            {{ form.end_date }}
+                            {% if form.end_date.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.end_date.errors }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Form Actions -->
+                <div class="flex gap-4 pt-4">
+                    <button type="submit"
+                            class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition duration-200">
+                        Export CSV
+                    </button>
+                    
+                    <a href="/"
+                       class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md text-center transition duration-200">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Export Information -->
+    <div class="mt-6 bg-blue-50 border border-blue-200 rounded-md p-4">
+        <h3 class="text-sm font-medium text-blue-800 mb-2">Export Information</h3>
+        <ul class="text-xs text-blue-700 space-y-1">
+            {% if model_name == 'Transactions' %}
+            <li>• <strong>CSV Format:</strong> Comma-separated values file</li>
+            <li>• <strong>Includes:</strong> Title, Amount, Type, Date, Category</li>
+            <li>• <strong>Sorting:</strong> Newest transactions first</li>
+            <li>• <strong>Date Range:</strong> Select specific period or custom range</li>
+            <li>• <strong>File:</strong> Downloads automatically after selection</li>
+            {% elif model_name == 'Goals' %}
+            <li>• <strong>CSV Format:</strong> Comma-separated values file</li>
+            <li>• <strong>Includes:</strong> Goal Name, Target Amount, Deadline</li>
+            <li>• <strong>Sorting:</strong> Nearest deadline first</li>
+            <li>• <strong>Date Range:</strong> Filter goals by deadline</li>
+            <li>• <strong>File:</strong> Downloads automatically after selection</li>
+            {% else %}
+            <li>• <strong>CSV Format:</strong> Comma-separated values file</li>
+            <li>• <strong>Includes:</strong> Category Name, Category Type (Income/Expense)</li>
+            <li>• <strong>Sorting:</strong> Alphabetical order</li>
+            <li>• <strong>File:</strong> Downloads automatically after selection</li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+
+{% if model_name != 'Categories' %}
+<script>
+    // JavaScript for showing/hiding custom date range
+    const radioButtons = document.querySelectorAll('input[name="date_range_type"]');
+    const customDateRange = document.getElementById('customDateRange');
+    
+    function toggleCustomDateRange() {
+        const selectedValue = document.querySelector('input[name="date_range_type"]:checked').value;
+        
+        if (selectedValue === 'custom') {
+            customDateRange.classList.remove('hidden');
+            const startDateInput = document.getElementById('id_start_date');
+            const endDateInput = document.getElementById('id_end_date');
+            if (startDateInput) startDateInput.required = true;
+            if (endDateInput) endDateInput.required = true;
+        } else {
+            customDateRange.classList.add('hidden');
+            const startDateInput = document.getElementById('id_start_date');
+            const endDateInput = document.getElementById('id_end_date');
+            if (startDateInput) startDateInput.required = false;
+            if (endDateInput) endDateInput.required = false;
+        }
+    }
+    
+    if (radioButtons.length > 0) {
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', toggleCustomDateRange);
+        });
+        toggleCustomDateRange();
+    }
+</script>
+{% endif %}
+{% endblock %}

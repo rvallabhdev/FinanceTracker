@@ -1,0 +1,157 @@
+<!-- csvhandler/templates/csvhandler/upload.html -->
+{% extends 'finance/base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <!-- Success/Error Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-4 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-700 border border-green-400{% else %}bg-red-100 text-red-700 border border-red-400{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <h1 class="text-2xl font-bold mb-6">
+                Import {{ selected_model|default:"Data" }}{% if selected_model == 'Transaction' %}s{% elif selected_model == 'Goal' %}s{% elif selected_model == 'Category' %}s{% endif %}
+            </h1>
+            
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Hidden field for model name (since it's already selected from dropdown) -->
+                <input type="hidden" name="model_name" value="{{ selected_model }}">
+                
+                <!-- File Upload with Styled Input -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        CSV File
+                    </label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-indigo-500 transition-colors">
+                        <div class="space-y-1 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="flex text-sm text-gray-600">
+                                <label for="{{ form.file.id_for_label }}" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                                    <span>Upload a file</span>
+                                    {{ form.file }}
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500">
+                                CSV files only
+                            </p>
+                        </div>
+                    </div>
+                    {% if form.file.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.file.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-2 text-xs text-gray-500">
+                        Columns must be in exact order as model fields
+                    </p>
+                </div>
+                
+                <!-- Skip Header with Styled Checkbox -->
+                <div class="flex items-center">
+                    <input type="checkbox" name="skip_header" id="skip_header" checked class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <label for="skip_header" class="ml-2 block text-sm text-gray-700">
+                        Skip header row (first row contains column names)
+                    </label>
+                </div>
+                
+                <!-- Format Hint -->
+                <div class="bg-gray-50 p-4 rounded-md">
+                    <p class="text-sm font-medium text-gray-700 mb-2">Expected CSV Format:</p>
+                    <div id="formatHint" class="text-sm text-gray-600">
+                        {% if selected_model == 'Transaction' %}
+                            <code class="text-xs bg-gray-100 p-1 rounded">Title, Amount, Type (Income/Expense), Date (YYYY-MM-DD), Category</code>
+                        {% elif selected_model == 'Goal' %}
+                            <code class="text-xs bg-gray-100 p-1 rounded">Name, Target Amount, Deadline (YYYY-MM-DD)</code>
+                        {% elif selected_model == 'Category' %}
+                            <code class="text-xs bg-gray-100 p-1 rounded">Name, Type (Income/Expense), Is Default (True/False)</code>
+                        {% else %}
+                            <code class="text-xs bg-gray-100 p-1 rounded">Select a model to see format</code>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Example CSV Preview -->
+                <div class="bg-blue-50 p-4 rounded-md border border-blue-200">
+                    <p class="text-sm font-medium text-blue-800 mb-2">📝 Example CSV content:</p>
+                    <div id="exampleHint" class="text-xs text-blue-700 font-mono">
+                        {% if selected_model == 'Transaction' %}
+                            Groceries,150.50,Expense,2024-01-15,Food<br>
+                            Salary,5000.00,Income,2024-01-01,Salary
+                        {% elif selected_model == 'Goal' %}
+                            Emergency Fund,10000.00,2024-12-31<br>
+                            Vacation,3000.00,2024-08-01
+                        {% elif selected_model == 'Category' %}
+                            Food,Expense,True<br>
+                            Salary,Income,True
+                        {% else %}
+                            Select a model to see example
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    Import CSV
+                </button>
+            </form>
+        </div>
+        
+        <!-- Recent Imports -->
+        {% if recent_imports %}
+        <div class="mt-8 bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">Recent Imports</h2>
+            <div class="space-y-2">
+                {% for import_file in recent_imports %}
+                <div class="flex justify-between items-center border-b pb-2 hover:bg-gray-50 p-2 rounded transition-colors">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">{{ import_file.file.name }}</p>
+                        <p class="text-xs text-gray-500">{{ import_file.uploaded_at|date:"Y-m-d H:i:s" }}</p>
+                    </div>
+                    <div class="text-xs text-gray-400">
+                        {{ import_file.file.size|filesizeformat }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* Hide the default file input but keep it functional */
+    #{{ form.file.id_for_label }} {
+        position: absolute;
+        width: 0.1px;
+        height: 0.1px;
+        opacity: 0;
+        overflow: hidden;
+        z-index: -1;
+    }
+</style>
+
+<script>
+// Display selected file name
+const fileInput = document.getElementById('{{ form.file.id_for_label }}');
+const fileLabel = document.querySelector('label[for="{{ form.file.id_for_label }}"] span');
+
+if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            const fileName = this.files[0].name;
+            fileLabel.textContent = fileName;
+        } else {
+            fileLabel.textContent = 'Upload a file';
+        }
+    });
+}
+</script>
+{% endblock %}

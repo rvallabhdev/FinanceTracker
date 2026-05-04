@@ -4,236 +4,248 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <!-- Header Section -->
+
+    <!-- Header -->
     <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">Transactions List</h1>
             <p class="text-sm text-gray-500 mt-1">View and manage all your transactions</p>
         </div>
         <a href="{% url 'transaction_add' %}" 
-           class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200 shadow-md hover:shadow-lg inline-flex items-center">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
+           class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm">
             Add Transaction
         </a>
     </div>
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg shadow-md p-4 text-white">
-            <p class="text-sm opacity-90">Total Transactions</p>
+        <div class="bg-indigo-500 rounded-lg p-4 text-white">
+            <p class="text-sm">Total Transactions</p>
             <p class="text-2xl font-bold">{{ transactions.count }}</p>
         </div>
-        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-md p-4 text-white">
-            <p class="text-sm opacity-90">Total Income</p>
-            <p class="text-2xl font-bold">
-                ${{ total_income|floatformat:2 }}
-            </p>
+        <div class="bg-green-500 rounded-lg p-4 text-white">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-sm">Total Income</p>
+                    <p class="text-2xl font-bold">${{ total_income|floatformat:2 }}</p>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#faf9f9" version="1.1" id="Capa_1" width="40px" height="40px" viewBox="0 0 32 32" xml:space="preserve">
+                    <g>
+                        <g id="money_4">
+                            <g>
+                                <path d="M32,22.327c0-1.705-1.387-3.093-3.092-3.093c-0.637,0-1.227,0.199-1.717,0.528h-0.002c0,0.003-0.002,0.003-0.002,0.005     c-0.207,0.142-0.398,0.301-0.566,0.485l0.008,0.008c-0.641,0.576-1.666,1.543-2.41,2.423c-0.16-0.412-0.404-0.787-0.717-1.093     c-3.053-2.688-6.723-3.78-10.93-3.78c-1.377,0-2.705,0.149-3.961,0.424c-0.037-0.457-0.063-0.735-0.063-0.735H0.359     c0,0-0.359,2.998-0.359,6.694c0,3.697,0.359,6.694,0.359,6.694h8.189c0,0,0.072-0.78,0.15-1.893     c1.219-0.205,2.465,0.116,3.908,1.012c1.828,1.195,4.08,1.902,6.518,1.902c2.472,0,4.594-0.729,6.36-1.955l0.002,0.002     c0.019-0.015,0.041-0.031,0.068-0.052c0.5-0.353,0.973-0.741,1.413-1.168c0.347-0.354,0.814-0.807,1.519-1.495     c2.361-2.32,2.652-2.781,2.652-2.781s-0.007,0.002-0.009,0.002C31.668,23.909,32,23.159,32,22.327z M30.121,23.54     c-0.414,0.41-2.166,2.215-2.639,2.678c-1.229,1.207-1.801,1.771-2.072,2.084l-0.004-0.006c-0.188,0.168-0.385,0.322-0.586,0.47     c-1.584,1.071-3.557,1.711-5.695,1.711c-2.158,0-4.146-0.647-5.736-1.735h-0.012c-1.375-0.841-2.988-1.354-4.584-1.197     c0.063-1.103,0.115-2.312,0.115-3.349c0-1.44-0.1-3.211-0.193-4.567c1.215-0.274,2.512-0.428,3.857-0.428     c4.12,0,7.762,1.362,9.995,3.495c0.263,0.293,0.429,0.679,0.429,1.101c0,0.916-0.744,1.658-1.658,1.658     c-0.035,0-0.067-0.009-0.103-0.011l-0.004,0.021c-0.854-0.03-2.188-0.389-4.442-1.25l-0.513,1.34     c2.384,0.91,3.953,1.318,5.066,1.347v-0.01c1.395-0.005,2.572-0.933,2.955-2.201v0.002c0.482-0.801,2.287-2.472,3.312-3.383     l0.002,0.002c0.011-0.011,0.021-0.019,0.027-0.026c0.19-0.171,0.354-0.313,0.473-0.416c0.216-0.136,0.44-0.193,0.798-0.193     c0.914,0,1.655,0.744,1.655,1.656C30.564,22.786,30.363,23.219,30.121,23.54z"/>
+                                <path d="M21.973,18.611c5.105,0,9.26-4.153,9.26-9.259s-4.152-9.26-9.26-9.26c-5.106,0-9.26,4.154-9.26,9.26     S16.865,18.611,21.973,18.611z M21.973,1.706c4.215,0,7.646,3.432,7.646,7.646c0,4.214-3.432,7.646-7.646,7.646     c-4.217,0-7.646-3.432-7.646-7.646C14.327,5.137,17.756,1.706,21.973,1.706z"/>
+                                <path d="M19.545,9.04c0.197,0.23,0.48,0.441,0.848,0.637c0.365,0.193,0.855,0.338,1.467,0.43     c0.174,0.029,0.348,0.066,0.521,0.115c0.178,0.045,0.338,0.109,0.486,0.188c0.146,0.08,0.268,0.176,0.361,0.287     c0.094,0.109,0.141,0.242,0.141,0.393c0,0.18-0.09,0.324-0.27,0.438c-0.184,0.111-0.406,0.166-0.682,0.166     c-0.209,0-0.396-0.016-0.559-0.049c-0.158-0.031-0.309-0.082-0.439-0.15c-0.132-0.068-0.262-0.154-0.389-0.26     c-0.125-0.104-0.254-0.227-0.385-0.371h-1.51v2.266h1.51v-0.338c0.072,0.037,0.146,0.072,0.225,0.104     c0.072,0.033,0.15,0.066,0.229,0.102v0.885h1.51v-0.681c0.324-0.021,0.625-0.09,0.9-0.205c0.277-0.113,0.518-0.266,0.719-0.453     c0.201-0.186,0.359-0.404,0.475-0.652s0.174-0.516,0.174-0.803c0-0.15-0.025-0.346-0.082-0.588     c-0.053-0.24-0.178-0.486-0.371-0.734c-0.191-0.248-0.477-0.477-0.846-0.689c-0.371-0.213-0.869-0.365-1.494-0.459     c-1.008-0.15-1.51-0.459-1.51-0.926c0-0.166,0.078-0.32,0.24-0.465c0.162-0.143,0.396-0.215,0.695-0.215     c0.209,0,0.391,0.018,0.545,0.053c0.154,0.037,0.297,0.09,0.426,0.156c0.129,0.068,0.252,0.154,0.367,0.26     c0.115,0.104,0.232,0.225,0.355,0.361h1.52V5.577h-1.508V5.9c-0.18-0.109-0.383-0.195-0.605-0.26V4.82H21.1v0.713     c-0.295,0.043-0.564,0.129-0.812,0.254s-0.463,0.283-0.646,0.475c-0.185,0.189-0.326,0.408-0.427,0.652     c-0.103,0.244-0.151,0.502-0.151,0.777c0,0.186,0.031,0.4,0.092,0.641C19.219,8.572,19.348,8.81,19.545,9.04z"/>
+                            </g>
+                        </g>
+                    </g>
+                </svg>
+            </div>
         </div>
-        <div class="bg-gradient-to-r from-red-500 to-red-600 rounded-lg shadow-md p-4 text-white">
-            <p class="text-sm opacity-90">Total Expenses</p>
-            <p class="text-2xl font-bold">
-                ${{ total_expense|floatformat:2 }}
-            </p>
+        <div class="bg-red-500 rounded-lg p-4 text-white">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-sm">Total Expenses</p>
+                    <p class="text-2xl font-bold">${{ total_expense|floatformat:2 }}</p>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#faf9f9" height="40px" width="40px" version="1.1" id="Layer_1" viewBox="0 0 501.057 501.057" xml:space="preserve">
+                    <g>
+                        <g>
+                            <g>
+                                <path d="M485.051,295.44L218.694,29.082c-2.021-2.02-4.817-3.075-7.658-2.912L95.044,32.994     c-2.809-4.522-6.127-8.728-9.953-12.554c-3.905-3.905-10.236-3.905-14.142,0c-3.854,3.853-3.898,10.065-0.147,13.981     l-37.837,2.226c-5.061,0.298-9.099,4.335-9.396,9.396L13.095,224.112c-0.168,2.852,0.892,5.639,2.911,7.659l266.357,266.357     c1.953,1.953,4.512,2.929,7.071,2.929s5.118-0.976,7.071-2.929l188.546-188.546C488.957,305.677,488.957,299.345,485.051,295.44z      M102.382,90.646c1.752,2.823,2.706,6.074,2.706,9.478c0,4.819-1.877,9.349-5.284,12.756c-3.407,3.407-7.938,5.284-12.756,5.284     c-0.331,0-0.657-0.03-0.985-0.048C93.716,110.154,99.215,100.733,102.382,90.646z M289.435,476.914L33.324,220.804L43.013,56.09     l39.871-2.345c0.945,2.772,1.634,5.589,2.076,8.421c-9.034,0.492-17.924,4.176-24.81,11.061     c-14.831,14.832-14.831,38.965,0,53.797c7.416,7.416,17.157,11.124,26.898,11.124s19.482-3.708,26.898-11.124     c14.831-14.832,14.831-38.965,0-53.797c-2.568-2.568-5.42-4.681-8.449-6.359c-0.205-4.792-0.903-9.591-2.117-14.328l104.347-6.14     l256.11,256.111L289.435,476.914z M83.938,82.374c-2.191,8.367-6.574,16.195-12.99,22.611c-0.337,0.337-0.634,0.698-0.913,1.068     c-2.194-6.329-0.789-13.639,4.257-18.685C77.016,84.644,80.403,82.988,83.938,82.374z"/>
+                                <path d="M30.848,20.24c4.782-0.469,9.599-0.25,14.315,0.653c0.635,0.122,1.268,0.18,1.891,0.18c4.702,0,8.895-3.333,9.811-8.122     c1.039-5.424-2.517-10.664-7.941-11.702c-6.598-1.263-13.336-1.57-20.03-0.914c-5.496,0.54-9.515,5.433-8.975,10.93     C20.459,16.762,25.358,20.785,30.848,20.24z"/>
+                                <path d="M203.56,298.095c-7.038-7.038-11.916-15.486-14.773-23.518c-1.463-4.113-6.143-6.067-10.09-4.202l-1.929,0.912     c-3.359,1.587-5.046,5.434-3.861,8.955c2.975,8.842,9.029,18.826,16.699,26.764l-11.77,11.77c-2.879,2.879-2.879,7.546,0,10.425     l0.167,0.167c2.879,2.879,7.546,2.879,10.425,0l12.274-12.274c20.177,14.461,41.868,11.266,55.151-2.017     c14.965-14.965,14.965-32.451,4.708-56.832c-8.575-20.682-10.425-31.274-1.681-40.018c6.726-6.726,19.336-9.585,32.283,3.363     c7.019,7.019,10.819,13.967,13.033,19.49c1.572,3.921,6.047,5.786,9.899,4.05l1.805-0.813c3.569-1.608,5.298-5.739,3.851-9.376     c-2.514-6.319-6.676-13.478-13.791-21.085l11.097-11.097c2.879-2.879,2.879-7.546,0-10.425c-2.879-2.879-7.546-2.879-10.425,0     l-11.77,11.77c-17.991-12.947-38.505-12.274-52.46,1.681c-14.628,14.628-11.77,32.956-1.345,56.832     c7.398,17.487,8.239,29.761-1.009,39.009C230.463,311.21,215.499,310.034,203.56,298.095z"/>
+                            </g>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+        </div>
+            
         </div>
     </div>
 
-    <!-- Search and Filter Bar -->
-    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+    <!-- FILTER FORM (Django GET) -->
+    <form method="GET" class="bg-white rounded-lg shadow-md p-4 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <input type="text" id="searchInput" placeholder="Search by title or category..." 
-                   class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-            <select id="typeFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">All Types</option>
-                <option value="Income">Income</option>
-                <option value="Expense">Expense</option>
-            </select>
-            <input type="date" id="startDate" placeholder="Start Date" 
-                   class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <input type="date" id="endDate" placeholder="End Date" 
-                   class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        </div>
-    </div>
 
-    <!-- Transactions Table -->
+            <input type="text" name="search" value="{{ request.GET.search }}"
+                   placeholder="Search by title or category..."
+                   class="px-3 py-2 border border-gray-300 rounded-lg">
+
+            <select name="type" class="px-3 py-2 border border-gray-300 rounded-lg">
+                <option value="">All Types</option>
+                <option value="Income" {% if request.GET.type == "Income" %}selected{% endif %}>Income</option>
+                <option value="Expense" {% if request.GET.type == "Expense" %}selected{% endif %}>Expense</option>
+            </select>
+
+            <input type="date" name="start_date" value="{{ request.GET.start_date }}"
+                   class="px-3 py-2 border border-gray-300 rounded-lg">
+
+            <input type="date" name="end_date" value="{{ request.GET.end_date }}"
+                   class="px-3 py-2 border border-gray-300 rounded-lg">
+
+        </div>
+
+        <div class="mt-4 flex gap-2">
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm cursor-pointer">
+                Apply Filters
+            </button>
+
+            <a href="{% url 'transaction_list' %}" class="bg-white-600 hover:bg-gray-100 border border-gray-400 text-black px-4 py-2 rounded-lg text-sm">
+                Reset
+            </a>
+        </div>
+    </form>
+
+    <!-- TABLE -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200" id="transactionsTable">
+
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(0)">
-                            Date <span class="ml-1">&#8597;</span>
+                        <th onclick="sortTable(0)" class="cursor-pointer px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Date
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(1)">
-                            Title <span class="ml-1">&#8597;</span>
+                        <th onclick="sortTable(1)" class="cursor-pointer px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Title
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(3)">
-                            Amount <span class="ml-1">&#8597;</span>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Category
                         </th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th onclick="sortTable(3)" class="cursor-pointer px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                            Amount
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                            Type
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                            Actions
+                        </th>
                     </tr>
                 </thead>
+
                 <tbody class="bg-white divide-y divide-gray-200">
                     {% for transaction in transactions %}
-                    <tr class="hover:bg-gray-50 transition-colors duration-150 transaction-row" 
-                        data-title="{{ transaction.title|lower }}" 
-                        data-category="{{ transaction.category|lower }}"
-                        data-type="{{ transaction.transaction_type }}"
-                        data-date="{{ transaction.date|date:'Y-m-d' }}">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ transaction.date|date:"M d, Y" }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ transaction.title }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <span class="px-2 py-1 bg-gray-100 rounded-full text-xs">{{ transaction.category }}</span>
+                    <tr class="hover:bg-gray-50">
+
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            {{ transaction.date|date:"M d, Y" }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold {% if transaction.transaction_type == 'Income' %}text-green-600{% else %}text-red-600{% endif %}">
-                            {% if transaction.transaction_type == 'Income' %}+{% else %}-{% endif %} ${{ transaction.amount|floatformat:2 }}
+
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                            {{ transaction.title }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
-                            <span class="px-2 py-1 rounded-full text-xs font-medium {% if transaction.transaction_type == 'Income' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
-                                {% if transaction.transaction_type == "Income" %}
-                                    &#128176; Credit
-                                {% else %}
-                                    &#128184; Debit
-                                {% endif %}
+
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            <span class="px-2 py-1 bg-gray-100 rounded-full text-xs">
+                                {{ transaction.category }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm ">
-                            <button class="text-indigo-600 hover:text-indigo-900 mr-3 cursor-pointer" onclick="editTransaction({{ transaction.id }})">
-                                <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                </svg>
-                            </button>
-                            <button class="text-red-600 hover:text-red-900 cursor-pointer" onclick="deleteTransaction({{ transaction.id }})">
-                                <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
+
+                        <td class="px-6 py-4 text-sm text-right font-semibold
+                            {% if transaction.transaction_type == 'Income' %}
+                                text-green-600
+                            {% else %}
+                                text-red-600
+                            {% endif %}">
+                            {% if transaction.transaction_type == 'Income' %}+{% else %}-{% endif %}
+                            ${{ transaction.amount|floatformat:2 }}
+                        </td>
+
+                        <td class="px-6 py-4 text-center text-sm">
+                            {{ transaction.transaction_type }}
+                        </td>
+
+                        <td class="px-6 py-4 text-center text-sm flex justify-center gap-4">
+
+                           <!-- EDIT -->
+                            <div class="relative group inline-block">
+
+                                <button onclick="editTransaction({{ transaction.id }})"
+                                        class="text-indigo-600 hover:text-indigo-900 cursor-pointer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293z"/>
+                                    </svg>
+                                </button>
+
+                                <!-- Tooltip -->
+                                <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 
+                                            hidden group-hover:block 
+                                            bg-white text-gray-900 text-xs px-2 py-1 rounded shadow-lg border border-gray-200 whitespace-nowrap">
+                                    Edit
+                                </div>
+
+                            </div>
+
+                            <div class="relative group inline-block">
+
+                                <form method="POST" action="{% url 'transaction_delete' transaction.id %}">
+                                    {% csrf_token %}
+
+                                    <button type="submit"
+                                            onclick="return confirm('Are you sure you want to delete this transaction?')"
+                                            class="text-red-600 hover:text-red-900 cursor-pointer">
+                                        
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+                                        </svg>
+
+                                    </button>
+
+                                    <!-- Tooltip -->
+                                    <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 
+                                                hidden group-hover:block 
+                                                bg-white text-gray-900 text-xs px-2 py-1 rounded shadow-lg border border-gray-200 whitespace-nowrap">
+                                        Delete
+                                    </div>
+                                </form>
+                            </div>
                         </td>
                     </tr>
+
                     {% empty %}
                     <tr>
                         <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            <p class="mt-2">No transactions found</p>
-                            <a href="{% url 'transaction_add' %}" class="mt-4 inline-block text-indigo-600 hover:text-indigo-500">Add your first transaction →</a>
+                            No transactions found
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
+
             </table>
         </div>
     </div>
-    
-   <!-----Link to Go to Dashboard--> 
+
+    <!-- Back -->
     <div class="text-center mt-4">
-        <a href="{% url 'dashboard' %}" class="font-medium text-indigo-600 hover:text-indigo-500 transition duration-150 ease-in-out">
+        <a href="{% url 'dashboard' %}" class="text-indigo-600 hover:text-indigo-500">
             &larr; Back to Dashboard
         </a>
     </div>
+
 </div>
 
-<!-- JavaScript for filtering and sorting -->
+<!-- MINIMAL JS -->
 <script>
-    // Filter and search functionality
-    function filterTable() {
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        const typeFilter = document.getElementById('typeFilter').value;
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        
-        const rows = document.querySelectorAll('.transaction-row');
-        
-        rows.forEach(row => {
-            const title = row.dataset.title;
-            const category = row.dataset.category;
-            const type = row.dataset.type;
-            const date = row.dataset.date;
-            
-            let show = true;
-            
-            if (searchTerm && !title.includes(searchTerm) && !category.includes(searchTerm)) {
-                show = false;
-            }
-            
-            if (typeFilter && type !== typeFilter) {
-                show = false;
-            }
-            
-            if (startDate && date < startDate) {
-                show = false;
-            }
-            
-            if (endDate && date > endDate) {
-                show = false;
-            }
-            
-            row.style.display = show ? '' : 'none';
-        });
-    }
-    
-    // Sorting functionality
-    let sortDirection = {};
-    
-    function sortTable(columnIndex) {
-        const table = document.getElementById('transactionsTable');
-        const tbody = table.querySelector('tbody');
-        const rows = Array.from(tbody.querySelectorAll('.transaction-row'));
-        
-        sortDirection[columnIndex] = !sortDirection[columnIndex];
-        
-        rows.sort((a, b) => {
-            let aValue, bValue;
-            
-            switch(columnIndex) {
-                case 0: // Date
-                    aValue = new Date(a.dataset.date);
-                    bValue = new Date(b.dataset.date);
-                    break;
-                case 1: // Title
-                    aValue = a.cells[1].textContent;
-                    bValue = b.cells[1].textContent;
-                    break;
-                case 3: // Amount
-                    aValue = parseFloat(a.cells[3].textContent.replace(/[^0-9.-]/g, ''));
-                    bValue = parseFloat(b.cells[3].textContent.replace(/[^0-9.-]/g, ''));
-                    break;
-                default:
-                    return 0;
-            }
-            
-            if (aValue < bValue) return sortDirection[columnIndex] ? -1 : 1;
-            if (aValue > bValue) return sortDirection[columnIndex] ? 1 : -1;
-            return 0;
-        });
-        
-        rows.forEach(row => tbody.appendChild(row));
-    }
-    
-    // Edit and Delete functions
-    function editTransaction(id) {
-        window.location.href = `/transaction/edit/${id}/`;
-    }
-    
-    function deleteTransaction(id) {
-        if (confirm('Are you sure you want to delete this transaction?')) {
-            window.location.href = `/transaction/delete/${id}/`;
-        }
-    }
-    
-    // Event listeners
-    const searchInput = document.getElementById('searchInput');
-    const typeFilter = document.getElementById('typeFilter');
-    const startDate = document.getElementById('startDate');
-    const endDate = document.getElementById('endDate');
-    
-    if (searchInput) searchInput.addEventListener('input', filterTable);
-    if (typeFilter) typeFilter.addEventListener('change', filterTable);
-    if (startDate) startDate.addEventListener('change', filterTable);
-    if (endDate) endDate.addEventListener('change', filterTable);
+function editTransaction(id) {
+    window.location.href = `/transaction/edit/${id}/`;
+}
+
+function sortTable(columnIndex) {
+    const table = document.getElementById('transactionsTable');
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+    rows.sort((a, b) => {
+        const aText = a.cells[columnIndex].innerText;
+        const bText = b.cells[columnIndex].innerText;
+        return aText.localeCompare(bText, undefined, {numeric: true});
+    });
+
+    const tbody = table.querySelector('tbody');
+    rows.forEach(row => tbody.appendChild(row));
+}
 </script>
+
 {% endblock content %}
