@@ -64,9 +64,15 @@ class SimpleCSVImporter:
             
             # Validate number of columns based on model
             expected_columns = len(self.MODEL_FIELDS.get(self.model_name, []))
-            if len(df.columns) < expected_columns:
+            min_columns = expected_columns
+
+            # Category allows 2 columns (is_default is optional)
+            if self.model_name == 'Category':
+                min_columns = 2  # is_default is optional
+
+            if len(df.columns) < min_columns:
                 raise ValueError(
-                    f"CSV file has {len(df.columns)} columns but {self.model_name} requires at least {expected_columns} columns. "
+                    f"CSV file has {len(df.columns)} columns but {self.model_name} requires at least {min_columns} columns. "
                     f"Expected order: {', '.join(self.MODEL_FIELDS.get(self.model_name, []))}"
                 )
             
@@ -222,8 +228,9 @@ class SimpleCSVImporter:
                 raise ValueError(f"Invalid deadline date format: {date_value}")
             
             # Check if deadline is in the future
-            if deadline.date() < datetime.now().date():
-                logger.warning(f"Goal deadline '{deadline.date()}' is in the past for goal: {name}")
+            # FIXED: deadline is already a date object, so don't call .date() again
+            if deadline < datetime.now().date():
+                logger.warning(f"Goal deadline '{deadline}' is in the past for goal: {name}")
             
             # Create goal
             Goal.objects.create(
