@@ -1,8 +1,7 @@
 # csvhandler/forms.py
 from django import forms
 from datetime import datetime
-# csvhandler/forms.py
-from .models import CSVFile
+
 
 class DateRangeExportForm(forms.Form):
     """Generic form for date range based exports"""
@@ -71,12 +70,9 @@ class GenericExportForm(forms.Form):
         )
 
 
-# Import Data
-
-class CSVUploadForm(forms.ModelForm):
-    class Meta:
-        model = CSVFile
-        fields = ['file']
+# CSV Import Form - Regular Form (not ModelForm)
+class CSVUploadForm(forms.Form):
+    """Form for uploading CSV files - no database storage"""
     
     skip_header = forms.BooleanField(
         required=False,
@@ -89,4 +85,9 @@ class CSVUploadForm(forms.ModelForm):
         file = self.cleaned_data['file']
         if not file.name.endswith('.csv'):
             raise forms.ValidationError('Only CSV files are allowed')
+        
+        # Check file size (max 5MB)
+        if file.size > 5 * 1024 * 1024:
+            raise forms.ValidationError('File too large (max 5MB)')
+        
         return file

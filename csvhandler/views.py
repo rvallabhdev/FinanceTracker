@@ -11,7 +11,9 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 import logging
-from .models import CSVFile
+import tempfile
+import os
+# Remove: from .models import CSVFile
 from .forms import CSVUploadForm
 from .csv_import_helper import SimpleCSVImporter
 
@@ -322,17 +324,15 @@ class ExportOptionsView(LoginRequiredMixin, View):
         })
 
 
-# csvhandler/views.py - Updated CSVUploadView
+# Updated CSVUploadView without CSVFile model
 class CSVUploadView(LoginRequiredMixin, View):
-    """Simple CSV upload and import view"""
+    """Simple CSV upload and import view - no file storage"""
     
     def get(self, request, model_type=None):
         form = CSVUploadForm()
-        recent_imports = CSVFile.objects.filter().order_by('-uploaded_at')[:10]
-        
+        # Remove recent_imports since we're not storing files anymore
         return render(request, 'csvhandler/upload.html', {
             'form': form,
-            'recent_imports': recent_imports,
             'selected_model': model_type
         })
     
@@ -347,46 +347,56 @@ class CSVUploadView(LoginRequiredMixin, View):
         form = CSVUploadForm(request.POST, request.FILES)
         
         if form.is_valid():
-            # Save the CSV file
-            csv_file = form.save()
-            
-            # Get import parameters
+            csv_file = form.cleaned_data['file']
             skip_header = request.POST.get('skip_header') == 'on'
             
-            # Import the data
-            importer = SimpleCSVImporter(
-                user=request.user,
-                csv_file_obj=csv_file,
-                model_name=model_name,
-                skip_header=skip_header
-            )
-            
+            # Create temporary file instead of saving to database
+            temp_path = None
             try:
+                # Save uploaded file to temporary location
+                with tempfile.NamedTemporaryFile(mode='w+b', suffix='.csv', delete=False) as temp_file:
+                    for chunk in csv_file.chunks():
+                        temp_file.write(chunk)
+                    temp_path = temp_file.name
+                
+                # Import the data directly from temp file
+                importer = SimpleCSVImporter(
+                    user=request.user,
+                    file_path=temp_path,  # Pass file path directly
+                    model_name=model_name,
+                    skip_header=skip_header
+                )
+                
                 result = importer.import_data()
                 
                 if result['errors'] == 0:
                     messages.success(
                         request,
-                        f"Successfully imported {result['success']} {model_name}(s)!"
+                        f"✓ Successfully imported {result['success']} {model_name}(s)!"
                     )
                 else:
                     messages.warning(
                         request,
-                        f"Imported {result['success']} {model_name}(s) with {result['errors']} errors. "
-                        f"Errors: {'; '.join(result['error_details'][:3])}"
+                        f"⚠ Imported {result['success']} {model_name}(s) with {result['errors']} errors. "
+                        f"First error: {result['error_details'][0] if result['error_details'] else 'Unknown error'}"
                     )
                 
-                # Redirect back to the same model type
                 return redirect('csvhandler:upload_with_model', model_type=model_name)
                 
             except Exception as e:
-                messages.error(request, f"Import failed: {str(e)}")
+                messages.error(request, f"✗ Import failed: {str(e)}")
                 return redirect('csvhandler:upload_with_model', model_type=model_name)
+            
+            finally:
+                # Clean up temp file
+                if temp_path and os.path.exists(temp_path):
+                    try:
+                        os.unlink(temp_path)
+                    except:
+                        pass
         
         # If form is invalid
-        recent_imports = CSVFile.objects.filter().order_by('-uploaded_at')[:10]
         return render(request, 'csvhandler/upload.html', {
             'form': form,
-            'recent_imports': recent_imports,
             'selected_model': model_name
         })

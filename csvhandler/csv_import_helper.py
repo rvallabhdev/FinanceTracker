@@ -20,9 +20,9 @@ class SimpleCSVImporter:
         'Category': ['name', 'category_type', 'is_default'],
     }
     
-    def __init__(self, user, csv_file_obj, model_name, skip_header=True):
+    def __init__(self, user, file_path, model_name, skip_header=True):  # CHANGED: csv_file_obj to file_path
         self.user = user
-        self.csv_file_obj = csv_file_obj
+        self.file_path = file_path  # CHANGED: store file path directly
         self.model_name = model_name
         self.skip_header = skip_header
         self.success_count = 0
@@ -32,32 +32,27 @@ class SimpleCSVImporter:
     def import_data(self):
         """Import data from CSV with comprehensive error handling"""
         try:
-            # Check if file object exists
-            if not self.csv_file_obj:
-                raise ValueError("No CSV file object provided")
-            
             # Check if file path exists
-            if not hasattr(self.csv_file_obj, 'file'):
-                raise ValueError("CSV file object has no file attribute")
+            if not self.file_path:  # CHANGED: check file_path instead of csv_file_obj
+                raise ValueError("No file path provided")
             
             # Check if file exists on disk
-            file_path = self.csv_file_obj.file.path
-            if not os.path.exists(file_path):
-                raise FileNotFoundError(f"CSV file not found at: {file_path}")
+            if not os.path.exists(self.file_path):
+                raise FileNotFoundError(f"CSV file not found at: {self.file_path}")
             
             # Check file size
-            file_size = os.path.getsize(file_path)
+            file_size = os.path.getsize(self.file_path)
             if file_size == 0:
                 raise ValueError("CSV file is empty (0 bytes)")
             
             # Read CSV file with error handling
             skip_rows = 1 if self.skip_header else 0
             try:
-                df = pd.read_csv(file_path, skiprows=skip_rows, header=None, encoding='utf-8')
+                df = pd.read_csv(self.file_path, skiprows=skip_rows, header=None, encoding='utf-8')
             except UnicodeDecodeError:
                 # Try different encoding
                 try:
-                    df = pd.read_csv(file_path, skiprows=skip_rows, header=None, encoding='latin1')
+                    df = pd.read_csv(self.file_path, skiprows=skip_rows, header=None, encoding='latin1')
                 except Exception as e:
                     raise ValueError(f"Failed to read CSV file. Please ensure it's a valid CSV file. Error: {str(e)}")
             except Exception as e:
@@ -90,12 +85,7 @@ class SimpleCSVImporter:
                         if self.error_count > 100:
                             raise ValueError("Too many errors (over 100 rows). Import stopped.")
             
-            # Clean up file after successful import
-            try:
-                self.csv_file_obj.file.delete()
-                self.csv_file_obj.delete()
-            except Exception as e:
-                logger.warning(f"Failed to delete CSV file after import: {str(e)}")
+            # REMOVED: File cleanup code since we're using temp files (handled by views.py)
             
             return {
                 'success': self.success_count,
@@ -105,11 +95,6 @@ class SimpleCSVImporter:
             
         except FileNotFoundError as e:
             logger.error(f"File not found error: {str(e)}")
-            # Clean up orphaned database record
-            try:
-                self.csv_file_obj.delete()
-            except:
-                pass
             raise ValueError(f"CSV file is missing. Please upload the file again.")
             
         except pd.errors.EmptyDataError:
@@ -117,12 +102,6 @@ class SimpleCSVImporter:
             
         except Exception as e:
             logger.exception("Error importing CSV")
-            # Clean up on fatal error
-            try:
-                self.csv_file_obj.file.delete()
-                self.csv_file_obj.delete()
-            except:
-                pass
             raise ValueError(f"Import failed: {str(e)}")
     
     def _import_row(self, row, index):
