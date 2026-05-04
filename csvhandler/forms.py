@@ -74,6 +74,17 @@ class GenericExportForm(forms.Form):
 class CSVUploadForm(forms.Form):
     """Form for uploading CSV files - no database storage"""
     
+    # ADDED: file field (was missing)
+    file = forms.FileField(
+        label="CSV File",
+        required=True,
+        widget=forms.FileInput(attrs={
+            'class': 'w-full',
+            'accept': '.csv',
+            'id': 'csvFileInput'
+        })
+    )
+    
     skip_header = forms.BooleanField(
         required=False,
         initial=True,
@@ -82,7 +93,11 @@ class CSVUploadForm(forms.Form):
     )
     
     def clean_file(self):
-        file = self.cleaned_data['file']
+        file = self.cleaned_data.get('file')  # CHANGED: use .get() to avoid KeyError
+        
+        if not file:  # ADDED: check if file exists
+            raise forms.ValidationError('Please select a CSV file')
+        
         if not file.name.endswith('.csv'):
             raise forms.ValidationError('Only CSV files are allowed')
         
