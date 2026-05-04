@@ -40,27 +40,24 @@
                             <div class="flex text-sm text-gray-600">
                                 <label for="{{ form.file.id_for_label }}" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
                                     <span>Upload a file</span>
-                                    {{ form.file }}
                                 </label>
                                 <p class="pl-1">or drag and drop</p>
                             </div>
-                            <p class="text-xs text-gray-500" id="fileNameStatus">
-                                CSV files only (max 5MB)
+                            {{ form.file }}
+                            <p class="text-xs text-gray-500 mt-2" id="fileNameStatus">
+                                No file chosen
                             </p>
                         </div>
                     </div>
                     {% if form.file.errors %}
                         <p class="mt-1 text-sm text-red-600">{{ form.file.errors.0 }}</p>
                     {% endif %}
-                    <p class="mt-2 text-xs text-gray-500">
-                        Columns must be in exact order as model fields
-                    </p>
                 </div>
                 
                 <!-- Skip Header Checkbox -->
                 <div class="flex items-center">
-                    <input type="checkbox" name="skip_header" id="skip_header" checked class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                    <label for="skip_header" class="ml-2 block text-sm text-gray-700">
+                    {{ form.skip_header }}
+                    <label for="{{ form.skip_header.id_for_label }}" class="ml-2 block text-sm text-gray-700">
                         Skip header row (first row contains column names)
                     </label>
                 </div>
@@ -140,7 +137,7 @@
                 const fileSize = (this.files[0].size / 1024).toFixed(2);
                 fileNameStatus.innerHTML = `<span class="text-green-600">✓ Selected:</span> ${fileName} (${fileSize} KB)`;
             } else {
-                fileNameStatus.innerHTML = 'CSV files only (max 5MB)';
+                fileNameStatus.innerHTML = 'No file chosen';
             }
         });
     }
@@ -177,12 +174,15 @@
     }
     
     // Form validation before submit
-    document.getElementById('importForm').addEventListener('submit', function(e) {
-        if (!fileInput.files || fileInput.files.length === 0) {
-            e.preventDefault();
-            alert('Please select a CSV file to import');
-            return false;
-        }
-    });
+    const form = document.getElementById('importForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!fileInput.files || fileInput.files.length === 0) {
+                e.preventDefault();
+                alert('Please select a CSV file to import');
+                return false;
+            }
+        });
+    }
 </script>
 {% endblock %}

@@ -20,9 +20,9 @@ class SimpleCSVImporter:
         'Category': ['name', 'category_type', 'is_default'],
     }
     
-    def __init__(self, user, file_path, model_name, skip_header=True):  # CHANGED: csv_file_obj to file_path
+    def __init__(self, user, file_path, model_name, skip_header=True):
         self.user = user
-        self.file_path = file_path  # CHANGED: store file path directly
+        self.file_path = file_path
         self.model_name = model_name
         self.skip_header = skip_header
         self.success_count = 0
@@ -33,7 +33,7 @@ class SimpleCSVImporter:
         """Import data from CSV with comprehensive error handling"""
         try:
             # Check if file path exists
-            if not self.file_path:  # CHANGED: check file_path instead of csv_file_obj
+            if not self.file_path:
                 raise ValueError("No file path provided")
             
             # Check if file exists on disk
@@ -85,12 +85,10 @@ class SimpleCSVImporter:
                         if self.error_count > 100:
                             raise ValueError("Too many errors (over 100 rows). Import stopped.")
             
-            # REMOVED: File cleanup code since we're using temp files (handled by views.py)
-            
             return {
                 'success': self.success_count,
                 'errors': self.error_count,
-                'error_details': self.errors[:10]  # Return first 10 errors
+                'error_details': self.errors[:10]
             }
             
         except FileNotFoundError as e:
@@ -252,10 +250,10 @@ class SimpleCSVImporter:
         try:
             name = str(row[0]).strip() if pd.notna(row[0]) else ""
             category_type = str(row[1]).strip().capitalize() if len(row) > 1 and pd.notna(row[1]) else ""
-            is_default = False
             
-            # Parse is_default if provided
-            if len(row) > 2 and pd.notna(row[2]):
+            # CHANGED: Default to False if third column is not provided or empty
+            is_default = False
+            if len(row) > 2 and pd.notna(row[2]) and str(row[2]).strip() != '':
                 default_value = str(row[2]).strip().lower()
                 is_default = default_value in ['true', '1', 'yes', 'on']
             
